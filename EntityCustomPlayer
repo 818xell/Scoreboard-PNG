@@ -1,0 +1,244 @@
+package net.minecraft.server.v1_8_R3;
+
+import net.minecraft.server.v1_8_R3.DamageSource;
+import net.minecraft.server.v1_8_R3.Entity;
+import net.minecraft.server.v1_8_R3.EntityCreature;
+import net.minecraft.server.v1_8_R3.GenericAttributes;
+import net.minecraft.server.v1_8_R3.World;
+import net.minecraft.server.v1_8_R3.WorldServer;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
+
+public class EntityCustomPlayer
+extends EntityCreature {
+    private String skinURL = "";
+    private float scaleX = 1.0f;
+    private float scaleY = 1.0f;
+    private float scaleZ = 1.0f;
+    private boolean slim = false;
+
+    public EntityCustomPlayer(World world) {
+        super(world);
+        this.setSize(0.6f, 1.95f);
+        this.persistent = true;
+    }
+
+    @Override
+    protected void h() {
+        super.h();
+        this.datawatcher.a(16, "");
+        this.datawatcher.a(17, (byte)0);
+        this.datawatcher.a(18, "1.0,1.0,1.0");
+        this.datawatcher.a(19, (byte)127);
+    }
+
+    @Override
+    protected void initAttributes() {
+        super.initAttributes();
+        this.getAttributeInstance(GenericAttributes.maxHealth).setValue(20.0);
+        this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.0);
+    }
+
+    @Override
+    public void t_() {
+        super.t_();
+        this.motX = 0.0;
+        this.motY = 0.0;
+        this.motZ = 0.0;
+    }
+
+    @Override
+    public void g(float f, float f1) {
+    }
+
+    @Override
+    public void move(double d0, double d1, double d2) {
+        super.move(0.0, 0.0, 0.0);
+    }
+
+    public void setSkinURL(String url) {
+        String cleanedURL;
+        if (url == null) {
+            url = "";
+        }
+        this.skinURL = cleanedURL = this.cleanURL(url);
+        this.datawatcher.watch(16, cleanedURL);
+    }
+
+    public String getSkinURL() {
+        return this.datawatcher.getString(16);
+    }
+
+    private String cleanURL(String url) {
+        if (url == null || url.isEmpty()) {
+            return "";
+        }
+        int queryIndex = url.indexOf(63);
+        if (queryIndex != -1) {
+            return url.substring(0, queryIndex);
+        }
+        return url;
+    }
+
+    public void setSlim(boolean slim) {
+        this.slim = slim;
+        this.datawatcher.watch(17, (byte)(slim ? 1 : 0));
+    }
+
+    public boolean isSlim() {
+        return this.datawatcher.getByte(17) == 1;
+    }
+
+    public void setScale(float x, float y, float z) {
+        this.scaleX = x;
+        this.scaleY = y;
+        this.scaleZ = z;
+        this.datawatcher.watch(18, x + "," + y + "," + z);
+        float baseWidth = 0.6f;
+        float baseHeight = 1.95f;
+        float widthScale = (x + z) / 2.0f;
+        this.setSize(baseWidth * widthScale, baseHeight * y);
+        this.a(this.getBoundingBox());
+    }
+
+    public void setScale(float scale) {
+        this.setScale(scale, scale, scale);
+    }
+
+    public float[] getScale() {
+        String scaleData = this.datawatcher.getString(18);
+        String[] scales = scaleData.split(",");
+        if (scales.length == 3) {
+            try {
+                return new float[]{Float.parseFloat(scales[0]), Float.parseFloat(scales[1]), Float.parseFloat(scales[2])};
+            }
+            catch (NumberFormatException e) {
+                return new float[]{1.0f, 1.0f, 1.0f};
+            }
+        }
+        return new float[]{1.0f, 1.0f, 1.0f};
+    }
+
+    public float getScaleX() {
+        return this.getScale()[0];
+    }
+
+    public float getScaleY() {
+        return this.getScale()[1];
+    }
+
+    public float getScaleZ() {
+        return this.getScale()[2];
+    }
+
+    public void setLayers(byte layerFlags) {
+        this.datawatcher.watch(19, layerFlags);
+    }
+
+    public void enableAllLayers() {
+        this.setLayers((byte)127);
+    }
+
+    public void disableAllLayers() {
+        this.setLayers((byte)0);
+    }
+
+    public byte getLayers() {
+        return this.datawatcher.getByte(19);
+    }
+
+    @Override
+    public float getHeadHeight() {
+        return 1.62f * this.scaleY;
+    }
+
+    @Override
+    protected String z() {
+        return null;
+    }
+
+    @Override
+    protected String bo() {
+        return null;
+    }
+
+    @Override
+    protected String bp() {
+        return null;
+    }
+
+    @Override
+    protected void dropDeathLoot(boolean flag, int i) {
+    }
+
+    @Override
+    public boolean damageEntity(DamageSource damagesource, float f) {
+        return false;
+    }
+
+    @Override
+    protected boolean isTypeNotPersistent() {
+        return false;
+    }
+
+    @Override
+    public void collide(Entity entity) {
+    }
+
+    @Override
+    public void g(double x, double y, double z) {
+    }
+
+    public void setDisplayName(String name) {
+        this.setCustomName(name);
+        this.setCustomNameVisible(true);
+    }
+
+    public void hideDisplayName() {
+        this.setCustomNameVisible(false);
+    }
+
+    public void spawn(Location location) {
+        this.setPosition(location.getX(), location.getY(), location.getZ());
+        this.setYawPitch(location.getYaw(), location.getPitch());
+        WorldServer worldServer = ((CraftWorld)location.getWorld()).getHandle();
+        worldServer.addEntity(this);
+    }
+
+    public void remove() {
+        this.dead = true;
+        this.world.removeEntity(this);
+    }
+
+    public void lookAt(Entity entity) {
+        if (entity == null) {
+            return;
+        }
+        double dx = entity.locX - this.locX;
+        double dz = entity.locZ - this.locZ;
+        double dy = entity.locY + (double)entity.getHeadHeight() - (this.locY + (double)this.getHeadHeight());
+        double distance = Math.sqrt(dx * dx + dz * dz);
+        float yaw = (float)(Math.atan2(dz, dx) * 180.0 / Math.PI) - 90.0f;
+        float pitch = (float)(-(Math.atan2(dy, distance) * 180.0 / Math.PI));
+        this.yaw = yaw;
+        this.pitch = pitch;
+        this.aK = yaw;
+    }
+
+    public void lookAt(Location location) {
+        double dx = location.getX() - this.locX;
+        double dz = location.getZ() - this.locZ;
+        double dy = location.getY() - this.locY;
+        double distance = Math.sqrt(dx * dx + dz * dz);
+        float yaw = (float)(Math.atan2(dz, dx) * 180.0 / Math.PI) - 90.0f;
+        float pitch = (float)(-(Math.atan2(dy, distance) * 180.0 / Math.PI));
+        this.yaw = yaw;
+        this.pitch = pitch;
+        this.aK = yaw;
+    }
+
+    public void teleport(Location location) {
+        this.setPosition(location.getX(), location.getY(), location.getZ());
+        this.setYawPitch(location.getYaw(), location.getPitch());
+    }
+}
