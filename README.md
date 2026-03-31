@@ -21,7 +21,7 @@ Sunucuyu başlatıp durdurarak gerekli konfigürasyon dosyalarının oluşmasın
 
 Pluginin scoreboard görsellerini işleyebilmesi için Spigot çekirdeğinizde değişiklik yapmanız gerekir:
 
-Kullandığınız Spigot dosyasını bir arşiv yöneticisi (WinRAR vb.) ile açın.
+Kullandığınız Spigot dosyasını bir Recaff yöneticisi (JD-GUI vb.) ile açın.
 
 entitycustomplayer.class dosyasını bulun.
 
